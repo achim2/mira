@@ -14,7 +14,7 @@
                 <th v-for="(column, index) in columns"
                     :key="index">
                     <a href="#"
-                       @click="filteredUsers.sort(sort_by(column))"
+                       @click="paginatedData.sort(sort_by(column))"
                        :class="{active: sortKey === column}">
                         {{ column }}
                         <span v-if="sortKey === column">{{reverse ? '+' :'-'}}</span>
@@ -26,7 +26,7 @@
 
             <tbody>
             <template v-if="filteredUsers.length > 0">
-                <tr v-for="(user, index) in filteredUsers"
+                <tr v-for="(user, index) in paginatedData"
                     :key="index">
                     <td>{{ user.id }}</td>
                     <td>{{ user.name }}</td>
@@ -41,6 +41,20 @@
             </template>
             </tbody>
         </table>
+
+        <nav aria-label="Page navigation example">
+            <ul class="pagination">
+                <li :class="[{'disabled': currentPage === 0}, 'page-item']">
+                    <a class="page-link" href="#" @click="currentPage--">Prev</a>
+                </li>
+                <li :class="[{active: currentPage === page - 1}, 'page-item']" v-for="(page, index) in numPages" :key="index">
+                    <a class="page-link" href="#" @click="currentPage = page - 1">{{page}}</a>
+                </li>
+                <li :class="[{'disabled': currentPage === numPages - 1}, 'page-item']">
+                    <a class="page-link" href="#" @click="currentPage++">Next</a>
+                </li>
+            </ul>
+        </nav>
 
         <h3 v-if="filteredUsers.length === 0" class="text-center">No results!</h3>
 
@@ -119,6 +133,8 @@
     name: 'app',
     data() {
       return {
+        currentPage: 0,
+        recordsPerPage: 3,
         sortKey: null,
         reverse: true,
         search: '',
@@ -255,6 +271,20 @@
     beforeMount() {
       this.setColumns();
       this.filterUsers();
+    },
+    computed: {
+      paginatedData() {
+        const start = this.currentPage * this.recordsPerPage;
+        const end = start + this.recordsPerPage;
+
+        return this.filteredUsers.slice(start, end);
+      },
+      numPages() {
+        let l = this.filteredUsers.length;
+        let s = this.recordsPerPage;
+
+        return Math.ceil(l / s);
+      },
     },
     methods: {
       setColumns() {
